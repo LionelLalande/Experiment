@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <RootNamespace>DDD_CQRS_ES_Demo</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DDD-CQRS-ES-CSharp\DDD-CQRS-ES-CSharp.csproj" />
+    <ProjectReference Include="..\DDD-CQRS-ES-FSharp\DDD-CQRS-ES-FSharp.fsproj" />
+  </ItemGroup>
+
+</Project>
