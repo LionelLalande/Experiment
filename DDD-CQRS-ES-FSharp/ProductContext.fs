@@ -1,4 +1,4 @@
-﻿module DDD_CQRS_ES_FSharp.ProductContext
+module DDD_CQRS_ES_FSharp.ProductContext
 
     open System
 
@@ -14,7 +14,7 @@
 
     type Product = { Id: Id; Name: string }
 
-    let apply (product: Product) = 
+    let private apply (product: Product) = 
         function
         | Created (id, name) -> { Id = id; Name = name }
         | Renamed name -> { product with Name = name }
@@ -22,7 +22,7 @@
     module private Assert =
         let isValidName name = if String.IsNullOrEmpty(name) then invalidArg "name" "The name must not be null." else name
         
-    let createNew name =
+    let private createNew name =
         (Guid.NewGuid(), name)
     
     let exec (product: Product) =

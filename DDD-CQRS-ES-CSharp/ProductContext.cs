@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 
 namespace DDD_CQRS_ES_CSharp
 {
-    public static class ProductContext
+    public class ProductContext : IContext<ProductContext.Id, ProductContext.Product, ProductContext.Command, ProductContext.Event>
     {
         // In C# 8.0 transform Id to (see next line) =>
         // public struct Id(Guid value);
@@ -40,7 +40,7 @@ namespace DDD_CQRS_ES_CSharp
 
         public class Created : Event
         {
-            public Id Id { get; set; }
+            ////public Id Id { get; set; }
 
             public string Name { get; set; }
         }
@@ -52,38 +52,20 @@ namespace DDD_CQRS_ES_CSharp
 
         public sealed class Product // : Entity<Product>, IEntity
         {
-            public Id Id { get; set; }
+            ////public Id Id { get; private set; }
 
-            public string Name { get; set; }
+            public string Name { get; private set; }
 
             public void Apply(Created command)
             {
-                _name = command.Name;
+                ////Id = command.Id;
+                Name = command.Name;
             }
 
             public void Apply(Renamed command)
             {
-                _name = command.Name;
+                Name = command.Name;
             }
-
-            private string _name;
-        }
-
-        public static Func<Command, Product> Exec(Product product) =>
-            (cmd) =>
-            {
-                switch (cmd)
-                {
-                    case Create create: return ApplyCore(product, new Created { Id = new Id(Guid.NewGuid()), Name = Assert.IsValidName(create.Name) });
-                    case Rename rename: return ApplyCore(product, new Renamed { Name = Assert.IsValidName(rename.Name) });
-                    default: throw new NotSupportedException();
-                }
-            };
-
-        private static Product ApplyCore<TEvent>(Product p, TEvent e)
-        {
-            p.Apply((dynamic)e);
-            return p;
         }
 
         private static class Assert
@@ -93,6 +75,58 @@ namespace DDD_CQRS_ES_CSharp
                 if (string.IsNullOrEmpty(name))
                     throw new ArgumentException(nameof(name), "The name must not be null.");
                 return name;
+            }
+        }
+
+        // ==================================
+
+        public Func<Command, Event> Exec(Product entity) =>
+            (command) =>
+            {
+                var @event = ToEvent(command);
+                //entity.Apply((dynamic)@event);
+                return @event;
+            };
+
+        ////public Product ApplyEvent<TEvent>(Product p, TEvent e)
+        ////{
+        ////    p.Apply((dynamic)e);
+        ////    return p;
+        ////}
+
+        // ==================================
+
+        public IRepository<Id, Product> Repository { get; }
+
+        public ProductContext(IEventStore<Id, Event> store)
+        {
+            Repository = new EventStoreRepository<Id, Product, Command, Event>(store, this);
+        }
+
+        public Product CreateNew()
+        {
+            return new Product();
+        }
+
+        public Id CreateNewId()
+        {
+            return new Id(Guid.NewGuid());
+        }
+
+        public Product ApplyEvent(Product product, Event @event)
+        {
+            product.Apply((dynamic)@event);
+            return product;
+        }
+
+        private static Event ToEvent(Command command)
+        {
+            switch (command)
+            {
+                ////case Create create: return new Created { Id = new Id(Guid.NewGuid()), Name = Assert.IsValidName(create.Name) };
+                case Create create: return new Created { Name = Assert.IsValidName(create.Name) };
+                case Rename rename: return new Renamed { Name = Assert.IsValidName(rename.Name) };
+                default: throw new NotSupportedException();
             }
         }
     }
